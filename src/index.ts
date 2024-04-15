@@ -73,6 +73,43 @@ app.post("/checkout", async (c) => {
   }
 })
 
+app.post("/webhook", async (c) => {
+  const rawBody = await c.req.text()
+  const signature = c.req.header("stripe-signature")
+
+  let event
+  try {
+    event = stripe.webhooks.constructEvent(
+      rawBody,
+      signature!,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    )
+  } catch (error) {
+    console.log(`⚠️  Webhook signature verification failed.`)
+    throw new HTTPException(400)
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object
+    console.log("Checkout session completed")
+  }
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object
+    console.log(session)
+  }
+
+  if (event.type === "customer.subscription.updated") {
+    const subscription = event.data.object
+    console.log(subscription)
+  }
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object
+    console.log(subscription)
+  }
+
+  return c.text("success")
+})
+
 const port = 3000
 console.log(`Server is running on port ${port}`)
 
